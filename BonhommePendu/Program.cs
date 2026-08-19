@@ -17,7 +17,7 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", builder => builder
-        .WithOrigins("http://localhost:3000", "https://localhost:3000")
+        .WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:4200", "https://localhost:4200")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
