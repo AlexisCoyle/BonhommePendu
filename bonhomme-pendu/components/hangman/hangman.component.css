@@ -1,0 +1,14 @@
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.fadeIn
+{
+  animation: fadeIn 1.0s forwards;
+  -webkit-animation: fadeIn 1.0s forwards;
+  -moz-animation: fadeIn 1.0s forwards;
+  -o-animation: fadeIn 1.0s forwards;
+  -ms-animation: fadeIn 1.0s forwards;
+}
