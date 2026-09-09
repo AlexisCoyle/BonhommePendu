@@ -11,6 +11,8 @@ export default function Home() {
   const [hubConnection, setHubConnection] = React.useState<HubConnection>();
   const [isConnected, setIsConnected] = React.useState<boolean>(false);
   const [gameData, setGameData] = React.useState<GameData | undefined>();
+  const [letter, setLetter] = React.useState<string>("");
+  const [wronglyGuessedWord, setWronglyGuessedWord] = React.useState<string>("");
 
   useEffect(() => {
       connecttohub();
@@ -51,14 +53,14 @@ export default function Home() {
   }
 
   function guessWord(){
-    /* TODO:
-    hubConnection?.invoke("GuessLetter", this.letter.at(0));
-    this.letter = "";*/
+    if(letter.length > 0){
+      hubConnection?.invoke("GuessLetter", letter.at(0));
+      setLetter("");
+    }
   }
 
   function canStartNewGame(){
-    /* TODO:
-    return this.gameData == null || this.gameData.lost || this.gameData.won;*/
+    return gameData == null || gameData.lost || gameData.won;
   }
 
   async function applyEvent(event:any){
@@ -93,12 +95,58 @@ export default function Home() {
     return str.substring(0,index) + chr + str.substring(index+1);
 }
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if(e.key === 'Enter') {
+      guessWord();
+    }
+  };
+
   return (
     <div className="p-4">
         {isConnected ? (
           <div>
-            <p>Connecté au serveur!</p>
-            {gameData && <Hangman nbWrongGuesses={gameData.nbWrongGuesses} />}
+            <div>
+              <button disabled={!canStartNewGame()} onClick={() => startGame()}>Démarrer une nouvelle partie!</button>
+            </div>
+            {gameData && (
+              <div style={{ marginTop: '32px' }}>
+                {gameData && <Hangman nbWrongGuesses={gameData.nbWrongGuesses} />}
+                
+                <p style={{ fontSize: '48px', marginTop: '16px', marginBottom: '16px', fontFamily: "'Lucida Grande', monospace" }}>
+                  {gameData.revealedWord}
+                </p>
+                <p style={{ fontSize: '24px', marginTop: '16px', marginBottom: '16px', fontFamily: "'Lucida Grande', monospace" }}>
+                  Lettres: {gameData.guessedLetters.join(",")}
+                </p>
+                
+                {!gameData.won && !gameData.lost && (
+                  <form onSubmit={(e) => { e.preventDefault(); guessWord(); }}>
+                    <input 
+                      type="text" 
+                      maxLength={1} 
+                      value={letter}
+                      onChange={(e) => setLetter(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                    />
+                    <button type="button" disabled={letter.length === 0} onClick={guessWord}>
+                      Deviner
+                    </button>
+                  </form>
+                )}
+                
+                {gameData.won && (
+                  <div>
+                    Félicitations! 🎉🎉🎉
+                  </div>
+                )}
+                
+                {gameData.lost && (
+                  <div>
+                    Eeehhh... le mot c'était <b>{wronglyGuessedWord}</b>! Meilleure chance la prochaine fois... 😕
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <p>Connexion en cours...</p>
