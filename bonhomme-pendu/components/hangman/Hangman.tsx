@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import './hangman.component.css';
+import './hangman.css';
 
 interface HangmanProps {
   nbWrongGuesses: number;

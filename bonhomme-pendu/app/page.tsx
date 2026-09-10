@@ -36,9 +36,12 @@ export default function Home() {
         setRevealedWord(data.revealedWord);
         setGuessedLetters(data.guessedLetters);
         setCanStartNewGame(false);
+        setWon(false);
+        setLost(false);
       });
 
     newHubConnection.on('Event', (event) => {
+      console.log("Event received: ", event);
         applyEvent(event);
       });
     
@@ -78,13 +81,15 @@ export default function Home() {
         setGuessedLetters((prev) => [...prev, event.letter]);
         break;
       }
-      case "Won": {
+      case "Win": {
         setWon(true);
+        setCanStartNewGame(true);
         break;
       }
       case "Lose": {
         setLost(true);
         setWronglyGuessedWord(event.word);
+        setCanStartNewGame(true);
         break;
       }
     }
@@ -100,7 +105,7 @@ export default function Home() {
   function setCharAt(str:string, index:number, chr:string) {
     if(index > str.length-1) return str;
     return str.substring(0,index) + chr + str.substring(index+1);
-}
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if(e.key === 'Enter') {
@@ -115,7 +120,7 @@ export default function Home() {
             <div>
               <Button variant="secondary" disabled={!canStartNewGame} onClick={() => startGame()}>Démarrer une nouvelle partie!</Button>
             </div>
-            {!canStartNewGame && (
+            {(
               <div style={{ marginTop: '32px' }}>
                 <Hangman nbWrongGuesses={nbWrongGuesses} />
                 
