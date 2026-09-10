@@ -5,14 +5,22 @@ import { useEffect } from "react";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { GameData } from "./GameData";
 import { Hangman } from "@/components/hangman/Hangman";
+import { Button, Input } from "ui-exercices-5w5";
 
 export default function Home() {
 
   const [hubConnection, setHubConnection] = React.useState<HubConnection>();
   const [isConnected, setIsConnected] = React.useState<boolean>(false);
-  const [gameData, setGameData] = React.useState<GameData | undefined>();
   const [letter, setLetter] = React.useState<string>("");
+  
+  const [won, setWon] = React.useState<boolean>(false);
+  const [lost, setLost] = React.useState<boolean>(false);
   const [wronglyGuessedWord, setWronglyGuessedWord] = React.useState<string>("");
+
+  const [nbWrongGuesses, setNbWrongGuesses] = React.useState<number>(0);
+  const [revealedWord, setRevealedWord] = React.useState<string>("");
+  const [guessedLetters, setGuessedLetters] = React.useState<string[]>([]);
+  const [canStartNewGame, setCanStartNewGame] = React.useState<boolean>(true);
 
   useEffect(() => {
       connecttohub();
@@ -24,16 +32,13 @@ export default function Home() {
     .build();
 
     newHubConnection.on('GameData', (data:GameData) => {
-        console.log("Data:");
-        console.log(data);
-        setGameData(data);
-        
-        //this.hangman.restart(data.nbWrongGuesses);
+        setNbWrongGuesses(data.nbWrongGuesses);
+        setRevealedWord(data.revealedWord);
+        setGuessedLetters(data.guessedLetters);
+        setCanStartNewGame(false);
       });
 
     newHubConnection.on('Event', (event) => {
-        console.log("Event:");
-        console.log(event);
         applyEvent(event);
       });
     
@@ -59,35 +64,37 @@ export default function Home() {
     }
   }
 
-  function canStartNewGame(){
-    return gameData == null || gameData.lost || gameData.won;
-  }
-
   async function applyEvent(event:any){
-    if(gameData)
-    {
-      switch(event.eventType){
-        case "WrongGuess": {
-          gameData.nbWrongGuesses++;
-          //hangman.showMore();
-          break;
-        }
-        case "RevealLetter": {
-          gameData.revealedWord = setCharAt(gameData.revealedWord, event.index, event.letter);
-          break;
-        }
-        case "GuessedLetter": {
-          gameData.guessedLetters.push(event.letter);
-          break;
-        }
+    switch(event.eventType){
+      case "WrongGuess": {
+        setNbWrongGuesses((prev) => prev + 1);
+        break;
       }
-
-      if(event.events){
-        for(let e of event.events){
-          await applyEvent(e);
-        }
+      case "RevealLetter": {
+        setRevealedWord((prev) => setCharAt(prev, event.index, event.letter));
+        break;
+      }
+      case "GuessedLetter": {
+        setGuessedLetters((prev) => [...prev, event.letter]);
+        break;
+      }
+      case "Won": {
+        setWon(true);
+        break;
+      }
+      case "Lose": {
+        setLost(true);
+        setWronglyGuessedWord(event.word);
+        break;
       }
     }
+
+    if(event.events){
+      for(let e of event.events){
+        await applyEvent(e);
+      }
+    }
+    
   }
 
   function setCharAt(str:string, index:number, chr:string) {
@@ -106,41 +113,41 @@ export default function Home() {
         {isConnected ? (
           <div>
             <div>
-              <button disabled={!canStartNewGame()} onClick={() => startGame()}>Démarrer une nouvelle partie!</button>
+              <Button variant="secondary" disabled={!canStartNewGame} onClick={() => startGame()}>Démarrer une nouvelle partie!</Button>
             </div>
-            {gameData && (
+            {!canStartNewGame && (
               <div style={{ marginTop: '32px' }}>
-                {gameData && <Hangman nbWrongGuesses={gameData.nbWrongGuesses} />}
+                <Hangman nbWrongGuesses={nbWrongGuesses} />
                 
                 <p style={{ fontSize: '48px', marginTop: '16px', marginBottom: '16px', fontFamily: "'Lucida Grande', monospace" }}>
-                  {gameData.revealedWord}
+                  {revealedWord}
                 </p>
                 <p style={{ fontSize: '24px', marginTop: '16px', marginBottom: '16px', fontFamily: "'Lucida Grande', monospace" }}>
-                  Lettres: {gameData.guessedLetters.join(",")}
+                  Lettres: {guessedLetters.join(",")}
                 </p>
-                
-                {!gameData.won && !gameData.lost && (
+
+                {!canStartNewGame && (
                   <form onSubmit={(e) => { e.preventDefault(); guessWord(); }}>
-                    <input 
+                    <Input 
                       type="text" 
                       maxLength={1} 
                       value={letter}
                       onChange={(e) => setLetter(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={handleKeyPress}
                     />
-                    <button type="button" disabled={letter.length === 0} onClick={guessWord}>
+                    <Button type="button" disabled={letter.length === 0} onClick={guessWord}>
                       Deviner
-                    </button>
+                    </Button>
                   </form>
                 )}
                 
-                {gameData.won && (
+                {won && (
                   <div>
                     Félicitations! 🎉🎉🎉
                   </div>
                 )}
                 
-                {gameData.lost && (
+                {lost && (
                   <div>
                     Eeehhh... le mot c'était <b>{wronglyGuessedWord}</b>! Meilleure chance la prochaine fois... 😕
                   </div>
