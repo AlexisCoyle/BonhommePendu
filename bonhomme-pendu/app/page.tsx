@@ -5,7 +5,15 @@ import { useEffect } from "react";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { GameData } from "./GameData";
 import { Hangman } from "@/components/hangman/Hangman";
-import { Button, Input } from "ui-exercices-5w5";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+enum GameState {
+  None,    // 0
+  Playing,  // 1
+  Won,  // 2
+  Lost  // 3
+}
 
 export default function Home() {
 
@@ -13,14 +21,12 @@ export default function Home() {
   const [isConnected, setIsConnected] = React.useState<boolean>(false);
   const [letter, setLetter] = React.useState<string>("");
   
-  const [won, setWon] = React.useState<boolean>(false);
-  const [lost, setLost] = React.useState<boolean>(false);
   const [wronglyGuessedWord, setWronglyGuessedWord] = React.useState<string>("");
 
   const [nbWrongGuesses, setNbWrongGuesses] = React.useState<number>(0);
   const [revealedWord, setRevealedWord] = React.useState<string>("");
   const [guessedLetters, setGuessedLetters] = React.useState<string[]>([]);
-  const [canStartNewGame, setCanStartNewGame] = React.useState<boolean>(true);
+  const [gameState, setGameState] = React.useState<GameState>(GameState.None);
 
   useEffect(() => {
       connecttohub();
@@ -35,9 +41,7 @@ export default function Home() {
         setNbWrongGuesses(data.nbWrongGuesses);
         setRevealedWord(data.revealedWord);
         setGuessedLetters(data.guessedLetters);
-        setCanStartNewGame(false);
-        setWon(false);
-        setLost(false);
+        setGameState(GameState.Playing);
       });
 
     newHubConnection.on('Event', (event) => {
@@ -82,14 +86,15 @@ export default function Home() {
         break;
       }
       case "Win": {
-        setWon(true);
-        setCanStartNewGame(true);
+        setGameState(GameState.Won);
         break;
       }
       case "Lose": {
-        setLost(true);
+        setGameState(GameState.Lost);
         setWronglyGuessedWord(event.word);
-        setCanStartNewGame(true);
+        // Pour afficher les yeux!
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setNbWrongGuesses((prev) => prev + 1);
         break;
       }
     }
@@ -114,13 +119,13 @@ export default function Home() {
   };
 
   return (
-    <div className="p-4">
+    <div className="pl-4">
         {isConnected ? (
           <div>
             <div>
-              <Button variant="secondary" disabled={!canStartNewGame} onClick={() => startGame()}>Démarrer une nouvelle partie!</Button>
+              <Button disabled={gameState == GameState.Playing} onClick={() => startGame()}>Démarrer une nouvelle partie!</Button>
             </div>
-            {(
+            {gameState != GameState.None && (
               <div style={{ marginTop: '32px' }}>
                 <Hangman nbWrongGuesses={nbWrongGuesses} />
                 
@@ -131,28 +136,28 @@ export default function Home() {
                   Lettres: {guessedLetters.join(",")}
                 </p>
 
-                {!canStartNewGame && (
-                  <form onSubmit={(e) => { e.preventDefault(); guessWord(); }}>
-                    <Input 
-                      type="text" 
-                      maxLength={1} 
-                      value={letter}
-                      onChange={(e) => setLetter(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                    />
-                    <Button type="button" disabled={letter.length === 0} onClick={guessWord}>
-                      Deviner
-                    </Button>
-                  </form>
-                )}
                 
-                {won && (
+                <form onSubmit={(e) => { e.preventDefault(); guessWord(); }}>
+                  <Input
+                    className="mr-2 w-12" 
+                    type="text" 
+                    maxLength={1} 
+                    value={letter}
+                    onChange={(e) => setLetter(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                  />
+                  <Button type="button" disabled={letter.length === 0 || gameState != GameState.Playing} onClick={guessWord}>
+                    Deviner
+                  </Button>
+                </form>
+
+                {gameState == GameState.Won && (
                   <div>
                     Félicitations! 🎉🎉🎉
                   </div>
                 )}
-                
-                {lost && (
+
+                {gameState == GameState.Lost && (
                   <div>
                     Eeehhh... le mot c'était <b>{wronglyGuessedWord}</b>! Meilleure chance la prochaine fois... 😕
                   </div>

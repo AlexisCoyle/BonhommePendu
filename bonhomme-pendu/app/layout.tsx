@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}>     
       <body className={`${geistSans.variable} ${geistMono.variable} h-full antialiased max-w-[700px]`}>
-        <h1 className="text-3xl font-bold m-4">Bonhomme Pendu!</h1>
+        <h1 className="text-3xl font-bold m-2">Bonhomme Pendu!</h1>
         {children}
       </body>
     </html>
