@@ -14,7 +14,7 @@ namespace BonhommePendu.Events
             {
                 Events = new List<GameEvent>
                 {
-                    new LoseEvent(gameData)
+                    new LostEvent(gameData)
                 };
             }
         }

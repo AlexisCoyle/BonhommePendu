@@ -85,11 +85,11 @@ export default function Home() {
         setGuessedLetters((prev) => [...prev, event.letter]);
         break;
       }
-      case "Win": {
+      case "Won": {
         setGameState(GameState.Won);
         break;
       }
-      case "Lose": {
+      case "Lost": {
         setGameState(GameState.Lost);
         setWronglyGuessedWord(event.word);
         // Pour afficher les yeux!
