@@ -6,7 +6,6 @@ namespace BonhommePendu.Events
     [JsonDerivedType(typeof(GuessEvent))]
     [JsonDerivedType(typeof(WrongGuessEvent))]
     [JsonDerivedType(typeof(RevealLetterEvent))]
-    [JsonDerivedType(typeof(WonEvent))]
     [JsonDerivedType(typeof(LostEvent))]
     [JsonDerivedType(typeof(GuessedLetterEvent))]
     public abstract class GameEvent

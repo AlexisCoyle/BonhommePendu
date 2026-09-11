@@ -9,7 +9,6 @@ namespace BonhommePendu.Events
 
         public string Word { get; set; }
 
-        // TODO: Compléter
         public LostEvent(GameData gameData) {
             gameData.Lost = true;
             Word = gameData.Word;
