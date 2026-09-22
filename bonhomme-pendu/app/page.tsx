@@ -85,8 +85,18 @@ export default function Home() {
         setGuessedLetters((prev) => [...prev, event.letter]);
         break;
       }
+      case "Won": {
+        setGameState(GameState.Won);
+        break;
+      }
+      case "Lost": {
+        
+        setWronglyGuessedWord(event.word);
+        setGameState(GameState.Lost);
+        setTimeout(() => setNbWrongGuesses((prev) => prev + 1), 1000);
+        break;
+      }
     }
-
     if(event.events){
       for(let e of event.events){
         await applyEvent(e);
